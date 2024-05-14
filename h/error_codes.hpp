@@ -2,17 +2,19 @@
 // Created by os on 5/10/24.
 //
 
-#ifndef PROJECT_BASE_V1_1_ERROR_CODES
-#define PROJECT_BASE_V1_1_ERROR_CODES
+#ifndef PR_ERROR_CODES
+#define PR_ERROR_CODES
 
 #include "../lib/hw.h"
 
 
 constexpr uint64 MEM_ALLOC = 0x01;
 constexpr uint64 MEM_FREE = 0x02;
+constexpr uint64 THREAD_CREATE= 0x11;
+constexpr uint64 THREAD_EXIT = 0x12;
+constexpr uint64 THREAD_DISPATCH = 0x13;
 
 
 
 
-
-#endif //PROJECT_BASE_V1_1_ERROR_CODES
+#endif //PR_ERROR_CODES
