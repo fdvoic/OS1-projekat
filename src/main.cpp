@@ -3,16 +3,57 @@
 #include "../h/syscall_c.hpp"
 #include "../lib/console.h"
 #include "../h/riscv.hpp"
+#include "../h/tcb.hpp"
+#include "../javniTestovi_2024_1_1/userMain.hpp"
+//#include "../javniTestovi_2024_1_1/printing.hpp"
 
-extern "C" void supervisorTrap();
+static volatile bool finishedA = false;
+static volatile bool finishedB = false;
+
+static void workerBodyA(void* arg) {
+    for (uint64 i = 0; i < 10; i++) {
+
+        for (uint64 j = 0; j < 10000; j++) {
+            for (uint64 k = 0; k < 30000; k++) { /* busy wait */ }
+            thread_dispatch();
+        }
+        *(char*)arg+=1;
+    }
+
+    finishedA = true;
+    __putc('A');
+    __putc(*(char*)arg);
+    __putc('\n');
+}
+
+static void workerBodyB(void* arg) {
+    for (uint64 i = 0; i < 10; i++) {
+
+        for (uint64 j = 0; j < 10000; j++) {
+            for (uint64 k = 0; k < 30000; k++) { /* busy wait */ }
+            thread_dispatch();
+        }
+    }
+
+    finishedB = true;
+    __putc('B');
+    __putc(*((char*)arg+10));
+    __putc('\n');
+}
+
 
 void omotac(){
-    //__asm__ volatile ("mv t0, ra");
-    uint64 volatile x;
-    __asm__ volatile ("mv %0, ra" : "=r"(x));
-    __asm__ volatile("csrw sepc, %0" : : "r" (x));
-    //__asm__ volatile ("csrw t0, sepc");
+    thread_t threads[4];
+    char* arg_a=new char;
+    char* arg_b=(char*)"Proveri parametar B";
+    *arg_a='A';
+    thread_create(&threads[0], workerBodyA, (void*)arg_a);
+    thread_create(&threads[1], workerBodyB, (void*)arg_b);
+    while (!(finishedA && finishedB)) {
+        thread_dispatch();
+    }
 }
+
 
 void main(){
 
@@ -27,7 +68,20 @@ void main(){
 
     Riscv::w_stvec((uint64) &Riscv::supervisorTrap);
 
+    TCB* threadsa[5];
 
+    threadsa[0] = TCB::createThread(nullptr, nullptr);
+    TCB::running = threadsa[0];
+    omotac();
+
+
+    //userMain();
+    //Riscv::ms_sstatus(Riscv::SSTATUS_SIE);
+
+    //Threads_C_API_test();
+
+
+    /*
     int* a = (int*) mem_alloc(200);
     int* b = (int*) mem_alloc(254);
     int* c = (int*) mem_alloc(32);
@@ -38,5 +92,6 @@ void main(){
     c++;
     uspeh++;
     f++;
+    */
     return;
 }
