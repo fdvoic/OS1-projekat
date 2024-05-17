@@ -5,21 +5,23 @@
 #include "../h/riscv.hpp"
 #include "../h/tcb.hpp"
 #include "../javniTestovi_2024_1_1/userMain.hpp"
+#include "../h/sem_minor.hpp"
 //#include "../javniTestovi_2024_1_1/printing.hpp"
 
 static volatile bool finishedA = false;
 static volatile bool finishedB = false;
 
+
+
 static void workerBodyA(void* arg) {
     for (uint64 i = 0; i < 10; i++) {
 
-        for (uint64 j = 0; j < 10000; j++) {
+        for (uint64 j = 0; j < 1000; j++) {
             for (uint64 k = 0; k < 30000; k++) { /* busy wait */ }
-            thread_dispatch();
+            //thread_dispatch();
         }
         *(char*)arg+=1;
     }
-
     finishedA = true;
     __putc('A');
     __putc(*(char*)arg);
@@ -29,14 +31,14 @@ static void workerBodyA(void* arg) {
 static void workerBodyB(void* arg) {
     for (uint64 i = 0; i < 10; i++) {
 
-        for (uint64 j = 0; j < 10000; j++) {
+        for (uint64 j = 0; j < 1000; j++) {
             for (uint64 k = 0; k < 30000; k++) { /* busy wait */ }
             thread_dispatch();
         }
     }
-
     finishedB = true;
     __putc('B');
+    //thread_exit();
     __putc(*((char*)arg+10));
     __putc('\n');
 }
@@ -54,7 +56,6 @@ void omotac(){
     }
 }
 
-
 void main(){
 
     //uint64 OLD_VEC = Riscv::r_stvec();
@@ -68,17 +69,31 @@ void main(){
 
     Riscv::w_stvec((uint64) &Riscv::supervisorTrap);
 
+
     TCB* threadsa[5];
 
-    threadsa[0] = TCB::createThread(nullptr, nullptr);
+    thread_create(&threadsa[0], nullptr, nullptr);
+
+    //char* arg_b=(char*)"Proveri parametar B";
+    //thread_create(&threadsa[1], workerBodyA, (void*) arg_b);
+    //threadsa[0]=createThread(nullptr, nullptr);
+
+
     TCB::running = threadsa[0];
-    omotac();
 
 
-    //userMain();
+    //Sem_minor* semafor = nullptr;
+    //sem_open(&semafor,1);
+    //sem_close(semafor);
+
+    //sem_signal(semafor);
+    //sem_wait(semafor);
+    // __putc('5' + semafor->getValue());
+
+
     //Riscv::ms_sstatus(Riscv::SSTATUS_SIE);
 
-    //Threads_C_API_test();
+    userMain();
 
 
     /*

@@ -32,6 +32,15 @@ int mem_free(void* pt){
 
 }
 
+int thread_exit(){
+    __asm__ volatile("mv a0, %0" : : "r"(THREAD_EXIT));
+    __asm__ volatile("ecall");
+
+    uint64 success;
+    __asm__ volatile("mv %0, a0" : "=r"(success));
+    return success;
+}
+
 int thread_create(thread_t *handle, void (*star_routine)(void *), void *arg) {
 
     __asm__ volatile("mv a7, %0" : : "r"(arg));
@@ -50,3 +59,71 @@ void thread_dispatch() {
     __asm__ volatile("mv a0, %0" : : "r"(THREAD_DISPATCH));
     __asm__ volatile("ecall");
 }
+
+int sem_open(sem_t* handle, unsigned init){
+
+    __asm__ volatile ("mv a2, %0" : : "r" (init));
+    __asm__ volatile ("mv a1, %0" : : "r" (handle));
+    __asm__ volatile ("mv a0, %0" : : "r" (SEM_OPEN));
+    __asm__ volatile ("ecall");
+
+    uint64 success;
+    __asm__ volatile("mv %0, a0" : "=r"(success));
+    return (int)success;
+
+}
+
+int sem_close(sem_t handle) {
+    if(!handle) return -2; // ERROR: Argument was incorrect
+
+    __asm__ volatile ("mv a1, %0" : : "r" (handle));
+    __asm__ volatile ("mv a0, %0" : : "r" (SEM_CLOSE));
+    __asm__ volatile ("ecall");
+
+    uint64 success;
+    __asm__ volatile("mv %0, a0" : "=r"(success));
+    return (int)success;
+}
+
+int sem_wait(sem_t id) {
+    if(!id) return -2; // ERROR: Argument was incorrect
+
+    __asm__ volatile ("mv a1, %0" : : "r" (id));
+    __asm__ volatile ("mv a0, %0" : : "r" (SEM_WAIT));
+    __asm__ volatile ("ecall");
+
+    uint64 success;
+    __asm__ volatile("mv %0, a0" : "=r"(success));
+    return (int)success;
+}
+
+int sem_signal(sem_t id) {
+    if(!id) return -2; // ERROR: Argument was incorrect
+
+    __asm__ volatile ("mv a1, %0" : : "r" (id));
+    __asm__ volatile ("mv a0, %0" : : "r" (SEM_SIGNAL));
+    __asm__ volatile ("ecall");
+
+    uint64 success;
+    __asm__ volatile("mv %0, a0" : "=r"(success));
+    return (int)success;
+}
+
+
+
+
+
+
+int sem_trywait(sem_t id) {
+    if(!id) return -2; // ERROR: Argument was incorrect
+
+    __asm__ volatile ("mv a1, %0" : : "r" (id));
+    __asm__ volatile ("mv a0, %0" : : "r" (SEM_TRYWAIT));
+    __asm__ volatile ("ecall");
+
+    uint64 success;
+    __asm__ volatile("mv %0, a0" : "=r"(success));
+    return (int)success;
+}
+
+
