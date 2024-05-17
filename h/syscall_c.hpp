@@ -23,8 +23,16 @@ void thread_dispatch(); //0x13
 
 
 //Semaphore
-class _sem;
-typedef _sem* sem_t;
+class Sem_minor;
+typedef Sem_minor* sem_t;
+
+int sem_open(sem_t* handle, unsigned init); //0x21
+int sem_close(sem_t handle); //0x22
+int sem_wait(sem_t id); //0x23
+int sem_signal(sem_t id); //0x24
+int sem_timedwait(sem_t id, time_t timeout); //0x25
+int sem_trywait(sem_t id); //0x26
+
 
 //Console
 

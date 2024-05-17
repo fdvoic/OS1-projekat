@@ -15,11 +15,18 @@ public:
     static TCB* running;
     static TCB* createThread(Body body, void* arg);
 
-    bool isFinished() const { return finished; }
+    bool getFinished() const { return finished; }
     void setFinished(bool val) { finished = val; }
 
-    bool isMain() const {return ma;}
+    bool getBlocked() const { return blocked; }
+    void setBlocked(bool val) { blocked = val; }
+
+    bool getAsleep() const { return asleep; }
+    void setAsleep(bool val) { asleep = val; }
+
+
     ~TCB() { delete[] stack;}
+
 
 private:
 
@@ -32,7 +39,9 @@ private:
                 stack != nullptr ? (uint64) &stack[DEFAULT_STACK_SIZE] : 0
         }),
         finished(false),
-        ma(body == nullptr)
+        blocked(false),
+        asleep(false),
+        remaingTime(DEFAULT_TIME_SLICE)
         {
             if(body != nullptr) {Scheduler::put(this);}
         }
@@ -48,8 +57,12 @@ private:
     uint64 *stack;
     Context context;
     bool finished;
-    bool ma;
+    bool blocked;
+    bool asleep;
+    uint64 remaingTime;
+
     friend class Riscv;
+    friend class Sem_minor;
 
     static void threadWrapper();
     static void contextSwitch(Context *oldContext, Context *newContext);
