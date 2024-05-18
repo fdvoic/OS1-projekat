@@ -9,17 +9,25 @@
 #include "../h/tcb.hpp"
 #include "../h/sem_minor.hpp"
 #include "../h/syscall_c.hpp"
+#include "../h/priorityQueue_Morpheus.hpp"
 
+priorityQueueMorpheus Riscv::PQS;
 
 const uint64 USER_CAUSE_ERROR = 0x0000000000000008UL;
 const uint64 SYSTEM_CAUSE_ERROR = 0x0000000000000009UL;
 
 using Body = void (*)(void*);
 
+bool Riscv::USER_END = false;
 
 void Riscv::popSppSpie()
 {
-
+    if (TCB::running->getMode()) {
+        ms_sstatus(SSTATUS_SPP);
+    }
+    else {
+        mc_sstatus(SSTATUS_SPP);
+    }
     __asm__ volatile("csrw sepc, ra");
     __asm__ volatile("sret");
 }
@@ -79,6 +87,7 @@ void Riscv::handleSupervisorTrap() {
                 __asm__ volatile("sd t0, 80(s0)");
                 break;
             case(THREAD_DISPATCH):
+                TCB::timeSliceCounter = 0;
                 TCB::dispatch();
                 break;
 
@@ -137,20 +146,29 @@ void Riscv::handleSupervisorTrap() {
     }
     else if(scause==0x8000000000000001UL)
     {
-        mc_sip(SIP_SSIE);
-        uint64 volatile sepc = r_sepc();
-        uint64 volatile sstatus = r_sstatus();
-        //__putc('T');
-        //__putc('\n');
-        //TCB::dispatch();
-        w_sstatus(sstatus);
-        w_sepc(sepc);
+        // interupt: yes; cause SOFTWARE (ie. Clock timer).
 
+        if(PQS.FirstRelTime() != (time_t)-1)
+        {
+            PQS.Decrease();
+            PQS.WakeFinished();
+        }
+        mc_sip(SIP_SSIE);
+        TCB::timeSliceCounter++;
+        if(TCB::timeSliceCounter >= TCB::running->givenTime) {
+            uint64 volatile sepc = r_sepc();
+            uint64 volatile sstatus = r_sstatus();
+            TCB::dispatch();
+            w_sstatus(sstatus);
+            w_sepc(sepc);
+        }
     }
     else if (scause == 0x8000000000000009UL)
     {
 //          interrupt: yes; cause code: supervisor external interrupt (PLIC; could be keyboard)
+        //uint64 volatile sstatus = r_sstatus();
         console_handler();
+        //w_sstatus(sstatus);
     }
     else
     {

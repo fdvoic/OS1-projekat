@@ -4,8 +4,11 @@
 #include "../h/tcb.hpp"
 #include "../h/riscv.hpp"
 #include "../lib/console.h"
+#include "../h/syscall_c.hpp"
 
 TCB* TCB::running = nullptr;
+uint64 TCB::timeSliceCounter = 0;
+
 
 TCB *TCB::createThread(Body body, void* arg) {
     return new TCB(body,arg);
@@ -16,17 +19,16 @@ void TCB::threadWrapper() {
     Riscv::popSppSpie();
     running->body(running->arg);
     running->setFinished(true);
-    dispatch();
+    //dispatch();
+    thread_dispatch();
 }
 
 void TCB::dispatch() {
-    //int imp = Riscv::r_sstatus(); // Soemthing is wrong with sret :^[
 
     TCB* old = running;
     if(!old->getFinished() && !old->getBlocked()) { Scheduler::put(old); }
     running = Scheduler::get();
 
-    //Riscv::w_sstatus(imp); // Ummmmmmmm necessary?
 
     // running == nullptr     <=>    Kernel tried sepuku. Should NOT happen.
     if(old != running && running != nullptr) contextSwitch(&old->context, &running->context);
