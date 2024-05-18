@@ -24,6 +24,8 @@ public:
     bool getAsleep() const { return asleep; }
     void setAsleep(bool val) { asleep = val; }
 
+    bool getMode() const { return MODE; }
+    void changeMode() { MODE =! MODE; }
 
     ~TCB() { delete[] stack;}
 
@@ -41,7 +43,8 @@ private:
         finished(false),
         blocked(false),
         asleep(false),
-        remaingTime(DEFAULT_TIME_SLICE)
+        givenTime(DEFAULT_TIME_SLICE),
+        MODE(false)
         {
             if(body != nullptr) {Scheduler::put(this);}
         }
@@ -59,7 +62,8 @@ private:
     bool finished;
     bool blocked;
     bool asleep;
-    uint64 remaingTime;
+    uint64 givenTime;
+    bool MODE;
 
     friend class Riscv;
     friend class Sem_minor;
@@ -68,6 +72,7 @@ private:
     static void contextSwitch(Context *oldContext, Context *newContext);
     static void dispatch();
 
+    static uint64 timeSliceCounter;
 
 };
 

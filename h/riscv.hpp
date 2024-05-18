@@ -6,7 +6,7 @@
 #define PROJECT_BASE_V1_1_RISCV_HPP
 
 #include "../lib/hw.h"
-
+#include "priorityQueue_Morpheus.hpp"
 
 
 class Riscv
@@ -82,9 +82,10 @@ public:
 
     static void supervisorTrap();
 
-
+    static bool USER_END;
 private:
 
+    static priorityQueueMorpheus PQS;
     // supervisor trap handler
     static void handleSupervisorTrap();
 };
