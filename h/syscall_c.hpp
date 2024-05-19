@@ -34,7 +34,15 @@ int sem_timedwait(sem_t id, time_t timeout); //0x25
 int sem_trywait(sem_t id); //0x26
 
 
-//Console
+// Time
+typedef unsigned long time_t;
+int time_sleep (time_t);
 
+
+//Console
+const int EOF = -1;
+
+char getc ();
+void putc (char);
 
 #endif //SYSCALL_C_HPP

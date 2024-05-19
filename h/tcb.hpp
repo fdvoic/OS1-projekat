@@ -7,13 +7,14 @@
 
 #include "../lib/hw.h"
 #include "scheduler.hpp"
+#include "syscall_c.hpp"
 
 class TCB {
 public:
     using Body = void(*)(void *);
 
     static TCB* running;
-    static TCB* createThread(Body body, void* arg);
+    static TCB* createThread(Body body, void* arg, void* stack);
 
     bool getFinished() const { return finished; }
     void setFinished(bool val) { finished = val; }
@@ -27,18 +28,18 @@ public:
     bool getMode() const { return MODE; }
     void changeMode() { MODE =! MODE; }
 
-    ~TCB() { delete[] stack;}
+    ~TCB() { MemoryAllocator::mem_free(stack);}
 
 
 private:
 
-    TCB(Body body, void* arg):
+    TCB(Body body, void* arg, void* st):
         body(body),
         arg(arg),
-        stack(body != nullptr ? new uint64[DEFAULT_STACK_SIZE/8] : nullptr),
+        stack(st),
         context({
                 (uint64) &threadWrapper,
-                stack != nullptr ? (uint64) &stack[DEFAULT_STACK_SIZE] : 0
+                (uint64) stack + DEFAULT_STACK_SIZE - 1
         }),
         finished(false),
         blocked(false),
@@ -57,7 +58,7 @@ private:
 
     Body body;
     void* arg;
-    uint64 *stack;
+    void *stack;
     Context context;
     bool finished;
     bool blocked;
