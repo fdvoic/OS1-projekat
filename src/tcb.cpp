@@ -10,23 +10,24 @@ TCB* TCB::running = nullptr;
 uint64 TCB::timeSliceCounter = 0;
 
 
-TCB *TCB::createThread(Body body, void* arg) {
-    return new TCB(body,arg);
+TCB *TCB::createThread(Body body, void* arg, void* stack) {
+    return new TCB(body,arg,stack);
 
 }
 
 void TCB::threadWrapper() {
     Riscv::popSppSpie();
     running->body(running->arg);
-    running->setFinished(true);
+    thread_exit();
+    //running->setFinished(true);
     //dispatch();
-    thread_dispatch();
+    //thread_dispatch();
 }
 
 void TCB::dispatch() {
 
     TCB* old = running;
-    if(!old->getFinished() && !old->getBlocked()) { Scheduler::put(old); }
+    if(!old->getFinished() && !old->getBlocked() && !old->getAsleep()) { Scheduler::put(old); }
     running = Scheduler::get();
 
 

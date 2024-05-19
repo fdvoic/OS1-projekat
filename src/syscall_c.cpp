@@ -43,7 +43,13 @@ int thread_exit(){
 
 int thread_create(thread_t *handle, void (*star_routine)(void *), void *arg) {
 
-    __asm__ volatile("mv a7, %0" : : "r"(arg));
+    void *stack_sp = nullptr;
+    if (star_routine) {
+        stack_sp = mem_alloc(DEFAULT_STACK_SIZE);
+    }
+
+    __asm__ volatile("mv a7, %0" : : "r"(stack_sp));
+    __asm__ volatile("mv a6, %0" : : "r"(arg));
     __asm__ volatile("mv a2, %0" : : "r"(star_routine));
     __asm__ volatile("mv a1, %0" : : "r"(handle));
     __asm__ volatile("mv a0, %0" : : "r"(THREAD_CREATE));
@@ -126,4 +132,17 @@ int sem_trywait(sem_t id) {
     return (int)success;
 }
 
+int time_sleep(time_t tim) {
+    if (tim <= 0) return -1;
+    __asm__ volatile("mv a1, %0" : : "r"(tim));
+    __asm__ volatile("mv a0, %0" : : "r"(TIME_SLEEP));
+    __asm__ volatile("ecall");
+    return 0;
+}
 
+
+void putc(char c) {
+    __asm__ volatile("mv a1,%0"::"r"(c));
+    __asm__ volatile("mv a0,%0"::"r"(PUT_C));
+    __asm__ volatile("ecall");
+}

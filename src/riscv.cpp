@@ -10,6 +10,7 @@
 #include "../h/sem_minor.hpp"
 #include "../h/syscall_c.hpp"
 #include "../h/priorityQueue_Morpheus.hpp"
+#include "../h/IOConsole.hpp"
 
 priorityQueueMorpheus Riscv::PQS;
 
@@ -68,11 +69,13 @@ void Riscv::handleSupervisorTrap() {
                 TCB** test;
                 Body body;
                 void* arg;
+                void* stack;
                 __asm__ volatile("mv %0, a1" : "=r" (test));
                 __asm__ volatile("mv %0, a2" : "=r" (body));
-                __asm__ volatile("mv %0, a7" : "=r" (arg));
+                __asm__ volatile("mv %0, a6" : "=r" (arg));
+                __asm__ volatile("mv %0, a7" : "=r" (stack));
 
-                *test =  TCB::createThread(body,arg);
+                *test =  TCB::createThread(body,arg,stack);
 
                 if(*test != nullptr) { __asm__ volatile("li a0, 0"); }
                 else { __asm__ volatile("li a0, -1"); }
@@ -137,6 +140,24 @@ void Riscv::handleSupervisorTrap() {
                 __asm__ volatile("sd a0, 80(s0)");
                 break;
 
+            case(TIME_SLEEP):
+                time_t tim;
+                __asm__ volatile ("mv %0, a1" : "=r" (tim));
+
+                if(tim > 0)
+                {
+                    TCB::running->setAsleep(true);
+                    PQS.Put(TCB::running, tim);
+                }
+                TCB::timeSliceCounter = 0;
+                TCB::dispatch();
+                break;
+
+            case(PUT_C):
+                char o;
+                __asm__ volatile ("mv %0, a1" : "=r" (o));
+                IOConsole::output(o);
+                break;
             default:
                 break;
         }
@@ -156,6 +177,7 @@ void Riscv::handleSupervisorTrap() {
         mc_sip(SIP_SSIE);
         TCB::timeSliceCounter++;
         if(TCB::timeSliceCounter >= TCB::running->givenTime) {
+            TCB::timeSliceCounter = 0;
             uint64 volatile sepc = r_sepc();
             uint64 volatile sstatus = r_sstatus();
             TCB::dispatch();
@@ -166,9 +188,15 @@ void Riscv::handleSupervisorTrap() {
     else if (scause == 0x8000000000000009UL)
     {
 //          interrupt: yes; cause code: supervisor external interrupt (PLIC; could be keyboard)
-        //uint64 volatile sstatus = r_sstatus();
-        console_handler();
-        //w_sstatus(sstatus);
+        uint64 volatile new_sepc = r_sepc();
+        uint64 volatile sstatus = r_sstatus();
+        uint64 reason = plic_claim();
+        if (reason == CONSOLE_IRQ) {
+            while (CONSOLE_RX_STATUS_BIT & (*(char *) CONSOLE_STATUS)) IOConsole::input(*(char *) CONSOLE_RX_DATA);
+        }
+        plic_complete((int) reason);
+        w_sstatus(sstatus);
+        w_sepc(new_sepc);
     }
     else
     {

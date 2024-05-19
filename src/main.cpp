@@ -6,15 +6,24 @@
 #include "../h/tcb.hpp"
 #include "../javniTestovi_2024_1_1/userMain.hpp"
 #include "../h/sem_minor.hpp"
+#include "../h/IOConsole.hpp"
 //#include "../javniTestovi_2024_1_1/printing.hpp"
 
+void ConsoleOutputStreamWrapper(void*) {
+    while (1) {
+        volatile char status = *((char *) CONSOLE_STATUS);
+        while ((status & CONSOLE_TX_STATUS_BIT))
+        {
+            char c = IOConsole::getCharFromOutput();
+            *((char *) CONSOLE_TX_DATA) = c;
+            status = *((char *) CONSOLE_STATUS);
+        }
+    }
+}
 
 
-void omotac(void*){
-    //Riscv::mc_sstatus(Riscv::SSTATUS_SPIE);
-    //Riscv::popSppSpie();
+void UserMainWrapper(void*){
     userMain();
-    Riscv::USER_END = true;
 }
 
 void main(){
@@ -22,35 +31,28 @@ void main(){
     MemoryAllocator::InitializeHeap();
     Riscv::w_stvec((uint64) &Riscv::supervisorTrap);
 
-    TCB* threadsa[5];
-    thread_create(&threadsa[0], nullptr, nullptr);
-    threadsa[0]->changeMode();
+    IOConsole::InitializeIOConsole();
 
-    //char* arg_b=(char*)"Proveri parametar B";
-    //thread_create(&threadsa[1], workerBodyA, (void*) arg_b);
-    //threadsa[0]=createThread(nullptr, nullptr);
+    TCB* SYS_THREADS[2];
+    TCB* USER_THREADS[1];
 
+    thread_create(&SYS_THREADS[0], nullptr, nullptr);
+    SYS_THREADS[0]->changeMode();
+    TCB::running = SYS_THREADS[0];
 
-    TCB::running = threadsa[0];
-
-
-    //Sem_minor* semafor = nullptr;
-    //sem_open(&semafor,1);
-    //sem_close(semafor);
-
-    //sem_signal(semafor);
-    //sem_wait(semafor);
-    // __putc('5' + semafor->getValue());
+    thread_create(&SYS_THREADS[1],ConsoleOutputStreamWrapper, nullptr);
+    SYS_THREADS[1]->changeMode();
 
 
-    //Riscv::ms_sstatus(Riscv::SSTATUS_SIE);
+    Riscv::ms_sstatus(Riscv::SSTATUS_SIE);
+    thread_create(&USER_THREADS[0], &UserMainWrapper, nullptr);
 
-    thread_create(&threadsa[1], &omotac, nullptr);
-    Riscv::USER_END = false;
-    while(!Riscv::USER_END)
+    while(!USER_THREADS[0]->getFinished())
     {
         thread_dispatch();
     }
+    while (!IOConsole::Flushed())  thread_dispatch();
+
 
     return;
 }
