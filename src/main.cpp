@@ -1,6 +1,7 @@
 
 #include "../h/memoryAllocator.hpp"
 #include "../h/syscall_c.hpp"
+#include "../h/syscall_cpp.hpp"
 #include "../lib/console.h"
 #include "../h/riscv.hpp"
 #include "../h/tcb.hpp"
@@ -21,6 +22,10 @@ void ConsoleOutputStreamWrapper(void*) {
     }
 }
 
+void LOOP(void *)
+{
+    while(1) thread_dispatch();
+}
 
 void UserMainWrapper(void*){
     userMain();
@@ -33,7 +38,7 @@ void main(){
 
     IOConsole::InitializeIOConsole();
 
-    TCB* SYS_THREADS[2];
+    TCB* SYS_THREADS[3];
     TCB* USER_THREADS[1];
 
     thread_create(&SYS_THREADS[0], nullptr, nullptr);
@@ -42,6 +47,9 @@ void main(){
 
     thread_create(&SYS_THREADS[1],ConsoleOutputStreamWrapper, nullptr);
     SYS_THREADS[1]->changeMode();
+
+    thread_create(&SYS_THREADS[2],LOOP, nullptr);
+    SYS_THREADS[2]->changeMode();
 
 
     Riscv::ms_sstatus(Riscv::SSTATUS_SIE);

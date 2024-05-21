@@ -152,7 +152,11 @@ void Riscv::handleSupervisorTrap() {
                 TCB::timeSliceCounter = 0;
                 TCB::dispatch();
                 break;
+            case(GET_C):
 
+                IOConsole::getCharFromInput();
+                __asm__ volatile("sd a0, 80(s0)");
+                break;
             case(PUT_C):
                 char o;
                 __asm__ volatile ("mv %0, a1" : "=r" (o));

@@ -29,7 +29,7 @@ void TCB::dispatch() {
     TCB* old = running;
     if(!old->getFinished() && !old->getBlocked() && !old->getAsleep()) { Scheduler::put(old); }
     running = Scheduler::get();
-
+    //TCB::timeSliceCounter = 0;
 
     // running == nullptr     <=>    Kernel tried sepuku. Should NOT happen.
     if(old != running && running != nullptr) contextSwitch(&old->context, &running->context);

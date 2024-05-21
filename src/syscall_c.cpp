@@ -140,6 +140,15 @@ int time_sleep(time_t tim) {
     return 0;
 }
 
+char getc() {
+
+    __asm__ volatile("mv a0,%0"::"r"(GET_C));
+    __asm__ volatile("ecall");
+
+    char c;
+    __asm__ volatile("mv %0, a0" : "=r"(c));
+    return c;
+}
 
 void putc(char c) {
     __asm__ volatile("mv a1,%0"::"r"(c));

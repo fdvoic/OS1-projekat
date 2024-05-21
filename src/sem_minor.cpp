@@ -14,9 +14,7 @@ Sem_minor *Sem_minor::createSem_minor(Sem_minor **handle, unsigned int init) {
 
 void Sem_minor::block() {
     TCB::running->setBlocked(true);
-    int imp = Riscv::r_sstatus();
     blockedTCBsList.addLast(TCB::running);
-    Riscv::w_sstatus(imp);
     TCB::dispatch();
 }
 
