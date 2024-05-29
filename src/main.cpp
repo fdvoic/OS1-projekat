@@ -1,14 +1,10 @@
 
 #include "../h/memoryAllocator.hpp"
 #include "../h/syscall_c.hpp"
-#include "../h/syscall_cpp.hpp"
-#include "../lib/console.h"
 #include "../h/riscv.hpp"
-#include "../h/tcb.hpp"
 #include "../javniTestovi_2024_1_1/userMain.hpp"
 #include "../h/sem_minor.hpp"
 #include "../h/IOConsole.hpp"
-//#include "../javniTestovi_2024_1_1/printing.hpp"
 
 void ConsoleOutputStreamWrapper(void*) {
     while (1) {
@@ -50,7 +46,6 @@ void main(){
 
     thread_create(&SYS_THREADS[2],LOOP, nullptr);
     SYS_THREADS[2]->changeMode();
-
 
     Riscv::ms_sstatus(Riscv::SSTATUS_SIE);
     thread_create(&USER_THREADS[0], &UserMainWrapper, nullptr);

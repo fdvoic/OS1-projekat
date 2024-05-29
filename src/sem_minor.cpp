@@ -4,8 +4,7 @@
 
 #include "../h/riscv.hpp"
 #include "../h/sem_minor.hpp"
-#include "../h/tcb.hpp"
-#include "../h/syscall_c.hpp"
+#include "../h/error_codes.hpp"
 
 Sem_minor *Sem_minor::createSem_minor(Sem_minor **handle, unsigned int init) {
     *handle = new Sem_minor(init);
@@ -21,6 +20,10 @@ void Sem_minor::block() {
 void Sem_minor::unblock() {
     TCB* ready = blockedTCBsList.removeFirst();
     ready->setBlocked(false);
+    if(ready->getAsleep()){
+        Riscv::PQS.RemoveSpecific(ready);  //REMOVE FROM LIST OF SLEEPING TCBS
+        ready->setAsleep(false);
+    }
     Scheduler::put(ready);
 }
 
@@ -41,6 +44,23 @@ int Sem_minor::signal() {
     if((int) this->value <= 0) unblock();
     return 0;
 }
+
+int Sem_minor::timedwait(time_t timeout) {
+    if(trywait() == 1) return 0;
+    TCB::running->setAsleep(true);
+    Riscv::PQS.Put(TCB::running, timeout);
+    --this->value;
+    block();
+    if(closed) return SEMDEAD;
+    if(TCB::running->getFailedSemTimedWait())
+    {
+        TCB::running->setFailedSemTimedWait(false);
+        return TIMEOUT;
+    }
+    return 0;
+
+}
+
 
 int Sem_minor::trywait() {
     if(closed) return -1;

@@ -29,7 +29,9 @@ int Semaphore::wait() {
     return sem_wait(myHandle);
 }
 
-
+int Semaphore::timedWait(time_t timeout) {
+    return sem_timedwait(myHandle,timeout);
+}
 
 
 int Semaphore::tryWait() {
@@ -75,10 +77,32 @@ int Thread::sleep(time_t tim) {
     return time_sleep(tim);
 }
 
-
-
-
 Thread::~Thread() {
    myHandle->setFinished(true);
    delete myHandle;
 }
+
+//=================PeriodicThread====================
+
+struct PD
+{
+    PeriodicThread* thread;
+    time_t time;
+    PD(PeriodicThread* t, time_t tm) : thread(t), time(tm) {}
+};
+
+PeriodicThread::PeriodicThread(time_t period)  : Thread(&PeriodicThread::threadWrapperPeriodic,new PD(this,period))
+{}
+
+void PeriodicThread::threadWrapperPeriodic(void *arg)
+{
+    PD* data = (PD*)arg;
+    PeriodicThread* thread = data->thread;
+    time_t time = data->time;
+    while(1)
+    {
+        thread->periodicActivation();
+        Thread::sleep(time);
+    }
+}
+

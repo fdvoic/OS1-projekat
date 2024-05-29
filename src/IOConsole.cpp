@@ -4,7 +4,6 @@
 
 #include "../h/IOConsole.hpp"
 
-
 Console_buffer* IOConsole::inputStream;
 Console_buffer* IOConsole::outputStream;
 

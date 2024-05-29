@@ -4,12 +4,7 @@
 
 #include "../h/riscv.hpp"
 #include "../h/error_codes.hpp"
-#include "../lib/console.h"
-#include "../h/memoryAllocator.hpp"
-#include "../h/tcb.hpp"
 #include "../h/sem_minor.hpp"
-#include "../h/syscall_c.hpp"
-#include "../h/priorityQueue_Morpheus.hpp"
 #include "../h/IOConsole.hpp"
 
 priorityQueueMorpheus Riscv::PQS;
@@ -18,8 +13,6 @@ const uint64 USER_CAUSE_ERROR = 0x0000000000000008UL;
 const uint64 SYSTEM_CAUSE_ERROR = 0x0000000000000009UL;
 
 using Body = void (*)(void*);
-
-bool Riscv::USER_END = false;
 
 void Riscv::popSppSpie()
 {
@@ -130,6 +123,18 @@ void Riscv::handleSupervisorTrap() {
                 Sem_minor* handle_to_signal;
                 __asm__ volatile ("mv %0, a1" : "=r" (handle_to_signal));
                 handle_to_signal->signal();
+                __asm__ volatile("sd a0, 80(s0)");
+                break;
+
+            case(SEM_TIMEDWAIT):
+                Sem_minor* handle_to_timed_wait;
+                time_t sl;
+
+                __asm__ volatile ("mv %0, a1" : "=r" (handle_to_timed_wait));
+                __asm__ volatile ("mv %0, a2" : "=r" (sl));
+
+                handle_to_timed_wait->timedwait(sl);
+
                 __asm__ volatile("sd a0, 80(s0)");
                 break;
 

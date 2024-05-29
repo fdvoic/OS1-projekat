@@ -3,8 +3,6 @@
 //
 #include "../h/tcb.hpp"
 #include "../h/riscv.hpp"
-#include "../lib/console.h"
-#include "../h/syscall_c.hpp"
 
 TCB* TCB::running = nullptr;
 uint64 TCB::timeSliceCounter = 0;
@@ -31,6 +29,6 @@ void TCB::dispatch() {
     running = Scheduler::get();
     //TCB::timeSliceCounter = 0;
 
-    // running == nullptr     <=>    Kernel tried sepuku. Should NOT happen.
+    // running == nullptr     <=>    Kernel je pokusao seppuku. Should NOT happen.
     if(old != running && running != nullptr) contextSwitch(&old->context, &running->context);
 }

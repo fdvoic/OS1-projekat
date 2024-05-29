@@ -38,7 +38,7 @@ int thread_exit(){
 
     uint64 success;
     __asm__ volatile("mv %0, a0" : "=r"(success));
-    return success;
+    return (int)success;
 }
 
 int thread_create(thread_t *handle, void (*star_routine)(void *), void *arg) {
@@ -115,9 +115,18 @@ int sem_signal(sem_t id) {
     return (int)success;
 }
 
+int sem_timedwait(sem_t id, time_t timeout){
+    if(!id) return -1;
 
+    __asm__ volatile ("mv a2, %0" : : "r" (timeout));
+    __asm__ volatile ("mv a1, %0" : : "r" (id));
+    __asm__ volatile ("mv a0, %0" : : "r" (SEM_TIMEDWAIT));
+    __asm__ volatile ("ecall");
 
-
+    uint64 success;
+    __asm__ volatile("mv %0, a0" : "=r"(success));
+    return (int)success;
+}
 
 
 int sem_trywait(sem_t id) {
