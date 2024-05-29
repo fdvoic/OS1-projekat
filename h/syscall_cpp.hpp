@@ -54,7 +54,7 @@ public:
 protected:
     PeriodicThread(time_t period);
     virtual void periodicActivation() {}
-    static void threadWrapperPeriodic(void* arg);
+    void run() final;
 private:
     time_t period;
 };
