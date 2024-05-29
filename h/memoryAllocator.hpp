@@ -2,15 +2,14 @@
 // Created by os on 5/2/24.
 //
 
-#ifndef MEMORYALLOCATOR
-#define MEMORYALLOCATOR
+#ifndef MEMORYALLOCATOR_HPP
+#define MEMORYALLOCATOR_HPP
 
 #include "../lib/hw.h"
 
 // DBlock ----Structure----
 // Struktura za vodjenje evidencije o Blokovima podataka.
 // Radi preglednijeg koda stoji van klase MemoryAllocator.
-
 struct DBlock {
     DBlock* next;
     DBlock* prev;
@@ -38,6 +37,9 @@ public:
     // Kernel poziva pri pokretanju.
     static void InitializeHeap();
 
+private:
+    MemoryAllocator() = default;
+    ~MemoryAllocator() = default;
 };
 
-#endif //MEMORYALLOCATOR
+#endif //MEMORYALLOCATOR_HPP

@@ -2,8 +2,8 @@
 // Created by os on 5/12/24.
 //
 
-#ifndef CHEDULER_HPP
-#define CHEDULER_HPP
+#ifndef SCHEDULER_HPP
+#define SCHEDULER_HPP
 
 #include "list.hpp"
 
@@ -22,4 +22,4 @@ private:
 };
 
 
-#endif //CHEDULER_HPP
+#endif //SCHEDULER_HPP

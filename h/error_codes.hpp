@@ -2,8 +2,8 @@
 // Created by os on 5/10/24.
 //
 
-#ifndef PR_ERROR_CODES
-#define PR_ERROR_CODES
+#ifndef PR_ERROR_CODES_HPP
+#define PR_ERROR_CODES_HPP
 
 #include "../lib/hw.h"
 
@@ -34,4 +34,4 @@ constexpr int TIMEOUT = -2;
 
 
 
-#endif //PR_ERROR_CODES
+#endif //PR_ERROR_CODES_HPP

@@ -2,12 +2,16 @@
 // Created by os on 5/19/24.
 //
 
-#ifndef PROJECT_BASE_V1_1_IOCONSOLE_HPP
-#define PROJECT_BASE_V1_1_IOCONSOLE_HPP
+#ifndef IOCONSOLE_HPP
+#define IOCONSOLE_HPP
 
 #include "Console_buffer.hpp"
 
+
 class Console_buffer;
+
+// IOConsole ----Singleton Class----
+// Konzola [getChar, putChar, getAVL]
 class IOConsole {
 public:
     static char getCharFromInput();
@@ -23,8 +27,11 @@ public:
 
 private:
 
+    IOConsole() = default;
+    ~IOConsole() = default;
+
     void* operator new (size_t size) {
-        return MemoryAllocator::mem_alloc(size);
+        return MemoryAllocator::mem_alloc((size/MEM_BLOCK_SIZE)+(size%MEM_BLOCK_SIZE!=0 ? 1 : 0));
     }
 
 
@@ -37,4 +44,4 @@ private:
 };
 
 
-#endif //PROJECT_BASE_V1_1_IOCONSOLE_HPP
+#endif //IOCONSOLE_HPP

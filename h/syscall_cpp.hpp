@@ -41,6 +41,8 @@ public:
     int timedWait(time_t);
     int tryWait();
 
+
+
 private:
     sem_t myHandle;
 };
@@ -52,7 +54,7 @@ public:
 protected:
     PeriodicThread(time_t period);
     virtual void periodicActivation() {}
-
+    static void threadWrapperPeriodic(void* arg);
 private:
     time_t period;
 };

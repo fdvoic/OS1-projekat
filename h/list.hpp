@@ -18,10 +18,10 @@ private:
 
 
         void* operator new(size_t size) {
-            return MemoryAllocator::mem_alloc(size);
+            return MemoryAllocator::mem_alloc((size/MEM_BLOCK_SIZE)+(size%MEM_BLOCK_SIZE!=0 ? 1 : 0));
         }
         void* operator new[](size_t size) {
-            return MemoryAllocator::mem_alloc(size);
+            return MemoryAllocator::mem_alloc((size/MEM_BLOCK_SIZE)+(size%MEM_BLOCK_SIZE!=0 ? 1 : 0));
         }
 
         void operator delete(void *ptr) {

@@ -2,13 +2,15 @@
 // Created by os on 5/18/24.
 //
 
-#ifndef PROJECT_BASE_V1_1_PRIORITYQUEUE_MORPHEUS_HPP
-#define PROJECT_BASE_V1_1_PRIORITYQUEUE_MORPHEUS_HPP
+#ifndef PRIORITYQUEUE_MORPHEUS_HPP
+#define PRIORITYQUEUE_MORPHEUS_HPP
 
 
 #include "scheduler.hpp"
 #include "tcb.hpp"
 
+// priorityQueueMorpheus ----Class----
+// Prioritetni red uspavanih TCB-ova [Decrease, FirstRelTime, WakeFinished, Put, RemoveSpecific]
 class priorityQueueMorpheus
 {
 private:
@@ -18,10 +20,10 @@ private:
         time_t relTime;
 
         void* operator new(size_t size) {
-            return MemoryAllocator::mem_alloc(size);
+            return MemoryAllocator::mem_alloc((size/MEM_BLOCK_SIZE)+(size%MEM_BLOCK_SIZE!=0 ? 1 : 0));
         }
         void* operator new[](size_t size) {
-            return MemoryAllocator::mem_alloc(size);
+            return MemoryAllocator::mem_alloc((size/MEM_BLOCK_SIZE)+(size%MEM_BLOCK_SIZE!=0 ? 1 : 0));
         }
 
         void operator delete(void *ptr) {
@@ -55,7 +57,10 @@ public:
             head = head->next;
             if(!head) tail = nullptr;
             curr->thread->setAsleep(false);
-            Scheduler::put(curr->thread);
+            if(curr->thread->getBlocked()){
+                curr->thread->setFailedSemTimedWait(true);
+            }
+            else Scheduler::put(curr->thread);
             delete curr;
         }
     }
@@ -90,8 +95,34 @@ public:
             }
         }
     }
+    void RemoveSpecific(TCB* tre){
+        Element* critical=head;
+        Element* prev = nullptr;
+        while(critical)
+        {
+            if(critical->thread->Equals(tre)) break;
+            prev=critical;
+            critical=critical->next;
+        }
+        if(critical == nullptr) return; // SHOULD NOT HAPPEN
+        if(critical->next)
+        {
+            critical->next->relTime+=critical->relTime;
+            if(prev) prev->next=critical->next;
+            else head=critical->next;
+        }
+        else{
+            if(prev){
+                prev->next = nullptr;
+                tail=prev;
+            }
+            else head = tail = nullptr;
+
+        }
+        delete critical;
+    }
 
 };
 
 
-#endif //PROJECT_BASE_V1_1_PRIORITYQUEUE_MORPHEUS_HPP
+#endif //PRIORITYQUEUE_MORPHEUS_HPP

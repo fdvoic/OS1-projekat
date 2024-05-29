@@ -82,7 +82,9 @@ public:
 
     static void supervisorTrap();
 
-    static bool USER_END;
+    friend Sem_minor;
+
+
 private:
 
     static priorityQueueMorpheus PQS;

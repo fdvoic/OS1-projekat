@@ -2,8 +2,8 @@
 // Created by os on 5/2/24.
 //
 
-#ifndef SYSCALL_C
-#define SYSCALL_C
+#ifndef SYSCALL_C_HPP
+#define SYSCALL_C_HPP
 
 #include "../lib/hw.h"
 
