@@ -59,8 +59,7 @@ Thread::Thread() : Thread(&threadWrapper,this) {
 
 int Thread::start() {
     if (myHandle==nullptr) {
-        thread_create(&myHandle,body,arg);
-        return 0;
+        return thread_create(&myHandle,body,arg);
     }
     else return -1;
 }
@@ -84,25 +83,18 @@ Thread::~Thread() {
 
 //=================PeriodicThread====================
 
-struct PD
-{
-    PeriodicThread* thread;
-    time_t time;
-    PD(PeriodicThread* t, time_t tm) : thread(t), time(tm) {}
-};
 
-PeriodicThread::PeriodicThread(time_t period)  : Thread(&PeriodicThread::threadWrapperPeriodic,new PD(this,period))
+PeriodicThread::PeriodicThread(time_t period)  : period(period)
 {}
 
-void PeriodicThread::threadWrapperPeriodic(void *arg)
-{
-    PD* data = (PD*)arg;
-    PeriodicThread* thread = data->thread;
-    time_t time = data->time;
-    while(1)
-    {
-        thread->periodicActivation();
-        Thread::sleep(time);
+void PeriodicThread::run() {
+    while(period){
+        periodicActivation();
+        Thread::sleep(period);
     }
+}
+
+void PeriodicThread::terminate() {
+    period=0;
 }
 
