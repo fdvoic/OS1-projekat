@@ -50,8 +50,11 @@ int Sem_minor::timedwait(time_t timeout) {
     TCB::running->setAsleep(true);
     Riscv::PQS.Put(TCB::running, timeout);
     --this->value;
+    sem_t s;
+    __asm__ volatile ("mv s0, %0" : : "r" (this));
     block();
-    if(closed) return SEMDEAD;
+    __asm__ volatile ("mv %0, s0" : "=r" (s));
+    if(s->closed) return SEMDEAD;
     if(TCB::running->getFailedSemTimedWait())
     {
         TCB::running->setFailedSemTimedWait(false);
